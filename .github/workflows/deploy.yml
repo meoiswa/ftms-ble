@@ -30,10 +30,13 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Sets the asset base path to /<repo-name>/ so all assets resolve correctly
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
-          # Optional — set GOOGLE_CLIENT_ID in repo secrets to enable Drive sync
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+
+      - name: Inject site verification meta tag
+        run: |
+          find dist -name "*.html" -exec \
+            sed -i "s|%GOOGLE_SITE_VERIFICATION%|${{ secrets.GOOGLE_SITE_VERIFICATION }}|g" {} \;
 
       - uses: actions/upload-pages-artifact@v3
         with:

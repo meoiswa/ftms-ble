@@ -24,19 +24,41 @@ function SyncOverlay() {
 }
 
 export default function App() {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   return (
     <HashRouter>
       <ThemeProvider>
         <AppProvider>
-          <div className="min-h-screen">
+          <div className="min-h-screen flex flex-col">
             <Header />
-            <main>
+            <main className="flex-1">
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </main>
+            <footer className="border-t border-cockpit-border bg-cockpit-dark py-2 px-4">
+              <div className="max-w-6xl mx-auto flex items-center justify-center gap-4">
+                <a
+                  href={`${base}/privacy.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-dim hover:text-amber-glow text-xs tracking-wider transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                <span className="text-amber-dim/40 text-xs">·</span>
+                <a
+                  href={`${base}/terms.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-dim hover:text-amber-glow text-xs tracking-wider transition-colors"
+                >
+                  Terms of Service
+                </a>
+              </div>
+            </footer>
           </div>
           <SyncOverlay />
         </AppProvider>
