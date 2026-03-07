@@ -1,0 +1,168 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.min.css');
+@import "tailwindcss";
+
+@theme {
+  /* Dark Amber color palette */
+  --color-cockpit-black: #0a0a0c;
+  --color-cockpit-dark: #111116;
+  --color-cockpit-panel: #16161e;
+  --color-cockpit-border: #1e1e2a;
+  --color-amber-glow: #ffb020;
+  --color-amber-dim: #a06800;
+  --color-amber-bright: #ffd060;
+  --color-green-glow: #00e87a;
+  --color-green-dim: #007a40;
+  --color-red-warn: #ff3030;
+  --color-teal-accent: #00c8c8;
+
+  /* Light mode palette */
+  --color-light-bg: #f0ede8;
+  --color-light-panel: #e8e3da;
+  --color-light-border: #c8bfb0;
+  --color-light-text: #2a2010;
+  --color-light-amber: #b06000;
+  --color-light-green: #007040;
+
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-lcd: 'DSEG7 Classic', 'DSEG7 Classic Mini', monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-mono);
+  background-color: var(--color-cockpit-black);
+  color: var(--color-amber-glow);
+  min-height: 100vh;
+}
+
+html.light body {
+  background-color: var(--color-light-bg);
+  color: var(--color-light-text);
+}
+
+/* Scanline overlay */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 176, 32, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 176, 32, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html.light .grid-bg {
+  background-image:
+    linear-gradient(rgba(176, 96, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(176, 96, 0, 0.06) 1px, transparent 1px);
+}
+
+/* Glow utilities */
+.glow-amber {
+  text-shadow: 0 0 8px var(--color-amber-glow), 0 0 20px var(--color-amber-dim);
+}
+.glow-green {
+  text-shadow: 0 0 8px var(--color-green-glow), 0 0 20px var(--color-green-dim);
+}
+.glow-border-amber {
+  box-shadow: 0 0 0 1px var(--color-amber-dim), 0 0 10px rgba(255, 176, 32, 0.15), inset 0 0 10px rgba(255, 176, 32, 0.04);
+}
+.glow-border-green {
+  box-shadow: 0 0 0 1px var(--color-green-dim), 0 0 10px rgba(0, 232, 122, 0.15), inset 0 0 10px rgba(0, 232, 122, 0.04);
+}
+
+/* Panel card */
+.panel {
+  background-color: var(--color-cockpit-panel);
+  border: 1px solid var(--color-cockpit-border);
+  border-radius: 4px;
+  position: relative;
+}
+html.light .panel {
+  background-color: var(--color-light-panel);
+  border-color: var(--color-light-border);
+}
+
+/* LCD digit font */
+.lcd {
+  font-family: var(--font-lcd);
+  font-feature-settings: "kern" 0;
+}
+
+/* Button base */
+.btn {
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-amber-dim);
+  background: transparent;
+  color: var(--color-amber-glow);
+  padding: 0.4em 1em;
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  transition: box-shadow 0.15s, background 0.15s;
+}
+.btn:hover {
+  background: rgba(255, 176, 32, 0.08);
+  box-shadow: 0 0 8px rgba(255, 176, 32, 0.3);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-green {
+  border-color: var(--color-green-dim);
+  color: var(--color-green-glow);
+}
+.btn-green:hover {
+  background: rgba(0, 232, 122, 0.08);
+  box-shadow: 0 0 8px rgba(0, 232, 122, 0.3);
+}
+.btn-danger {
+  border-color: #7a1010;
+  color: var(--color-red-warn);
+}
+.btn-danger:hover {
+  background: rgba(255, 48, 48, 0.08);
+  box-shadow: 0 0 8px rgba(255, 48, 48, 0.3);
+}
+
+html.light .btn {
+  border-color: var(--color-light-amber);
+  color: var(--color-light-amber);
+}
+html.light .btn:hover {
+  background: rgba(176, 96, 0, 0.08);
+}
+html.light .btn-green {
+  border-color: var(--color-light-green);
+  color: var(--color-light-green);
+}
+
