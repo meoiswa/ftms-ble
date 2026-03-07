@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy – FTMS Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1.5rem; color: #222; line-height: 1.7; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    p, li { font-size: 0.97rem; }
+    a { color: #1a6bbf; }
+    .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="meta">FTMS Dashboard &nbsp;·&nbsp; Last updated: March 7, 2026</p>
+
+  <h2>Overview</h2>
+  <p>
+    FTMS Dashboard is a free, open-source web application that connects to Bluetooth fitness machines
+    and lets you record and review workout sessions. This Privacy Policy explains how the application
+    handles your data.
+  </p>
+  <p>
+    <strong>The short version:</strong> all your data stays on your device. We do not operate any
+    servers, and we do not collect, transmit, or sell any personal information.
+  </p>
+
+  <h2>Data we collect</h2>
+  <p>We do not collect any data. Specifically:</p>
+  <ul>
+    <li>No analytics or tracking scripts are loaded.</li>
+    <li>No cookies are set by the application.</li>
+    <li>No data is sent to any server operated by this project.</li>
+  </ul>
+
+  <h2>Data stored on your device</h2>
+  <p>
+    Workout sessions (timestamps, duration, speed, power, heart rate, cadence, distance, and
+    calories, as reported by your fitness machine) are stored locally in your browser's IndexedDB
+    database. This data never leaves your device unless you explicitly enable Google Drive sync.
+  </p>
+  <p>
+    User preferences (theme, per-device field settings) are stored in your browser's
+    <code>localStorage</code>. This data is not shared with anyone.
+  </p>
+
+  <h2>Google Drive (optional)</h2>
+  <p>
+    If you choose to sign in with Google, the application requests the
+    <code>https://www.googleapis.com/auth/drive.file</code> scope. This scope grants the application
+    access <strong>only to files that it creates</strong> — it cannot read, modify, or delete any
+    other files in your Google Drive.
+  </p>
+  <p>The application uses this permission solely to:</p>
+  <ul>
+    <li>Upload your recorded workout sessions as JSON files to a folder named <em>FTMS Dashboard</em> in your Drive.</li>
+    <li>Download those same files to sync sessions across devices or browsers.</li>
+    <li>Delete a session file when you delete the corresponding session in the app.</li>
+  </ul>
+  <p>
+    Your Google account credentials are never stored by this application. The OAuth access token
+    provided by Google is held in memory only and is discarded when you sign out or close the page.
+  </p>
+  <p>
+    Google's own privacy practices are described in the
+    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>.
+  </p>
+
+  <h2>Bluetooth</h2>
+  <p>
+    The application uses the Web Bluetooth API to communicate with your fitness machine. Bluetooth
+    data is processed locally in your browser and is never transmitted over the internet.
+  </p>
+
+  <h2>Third-party services</h2>
+  <p>
+    No third-party analytics, advertising, or tracking services are used. The only external network
+    requests the application makes are to the Google Drive REST API, and only when you are signed in.
+  </p>
+
+  <h2>Children's privacy</h2>
+  <p>
+    This application does not knowingly collect information from anyone, including children under 13.
+  </p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If this policy changes materially, the updated version will be posted at this URL with a revised
+    date. Continued use of the application constitutes acceptance of the updated policy.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    This project is open source. If you have questions or concerns, please open an issue on the
+    <a href="https://github.com/meoiswa/ftms" target="_blank" rel="noopener">GitHub repository</a>.
+  </p>
+</body>
+</html>
