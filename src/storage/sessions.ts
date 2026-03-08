@@ -26,3 +26,8 @@ export async function deleteSession(id: string): Promise<void> {
     await db.put('sessions', session)
   }
 }
+
+export async function removeSession(id: string): Promise<void> {
+  const db = await getDb()
+  await db.delete('sessions', id)
+}

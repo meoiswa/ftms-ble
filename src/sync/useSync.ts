@@ -19,7 +19,7 @@ import {
 import {
   saveSession,
   getAllSessions,
-  deleteSession as dbDelete,
+  removeSession,
 } from "../storage/sessions";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -68,7 +68,7 @@ export function useSync(onSyncComplete?: () => void): SyncHook {
 
       // Remove local sessions that have been deleted on another device but are still present locally (tombstoned in index)
       for (const s of index.sessions.filter((s) => s.deletedAt)) {
-        await dbDelete(s.id);
+        await removeSession(s.id);
       }
 
       // Pull: sessions in Drive index but missing locally → download
