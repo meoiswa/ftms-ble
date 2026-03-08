@@ -46,7 +46,7 @@ export function Header() {
             className="text-amber-dim text-xs hidden sm:block tracking-wider hover:text-amber-glow transition-colors"
             title="Homepage"
           >
-            ⌂
+            Home
           </a>
           <span className="text-amber-dim text-xs hidden sm:block tracking-wider">DASHBOARD</span>
         </div>
