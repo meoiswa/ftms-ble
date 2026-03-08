@@ -59,9 +59,14 @@ To enable cloud sync you need a Google Cloud project with the Drive API and an O
 4. Add your deployment URL and `http://localhost:5173` to **Authorised JavaScript origins**
 5. Set the client ID as the `VITE_GOOGLE_CLIENT_ID` environment variable (or GitHub secret for Pages)
 
-Drive files are stored in a `FTMS Dashboard` folder in the user's Drive, named descriptively:
+Drive files are stored in a `FTMS Dashboard` folder in the user's Drive, named descriptively and gzip-compressed:
 ```
-2026-03-07_1930_IndoorBike_<session-id>.json
+2026-03-07_1930_IndoorBike_<session-id>.json.gz
+```
+
+The sync index is also stored as gzip-compressed JSON:
+```
+index.json.gz
 ```
 
 ## Tech stack
