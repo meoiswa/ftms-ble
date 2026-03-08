@@ -19,10 +19,10 @@ export async function getAllSessions(): Promise<Session[]> {
 
 export async function deleteSession(id: string): Promise<void> {
   const db = await getDb()
-  await db.delete('sessions', id)
-}
-
-export async function updateSession(session: Session): Promise<void> {
-  const db = await getDb()
-  await db.put('sessions', session)
+  const session = await db.get('sessions', id)
+  if (session) {
+    session.dataPoints = [] // Clear data points to save space, but keep metadata for sync purposes
+    session.deletedAt = Date.now()
+    await db.put('sessions', session)
+  }
 }

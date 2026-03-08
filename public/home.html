@@ -57,22 +57,35 @@
     .logo {
       font-family: monospace;
       color: var(--amber);
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       letter-spacing: 0.2em;
       text-shadow: 0 0 12px var(--amber);
       text-decoration: none;
       font-weight: bold;
+      text-transform: uppercase;
     }
-    .nav-links { display: flex; gap: 1.5rem; }
+    .logo-sub {
+      color: var(--amber-dim);
+      font-family: monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-left: 0.75rem;
+    }
+    .nav-links { display: flex; gap: 0.5rem; align-items: center; }
     .nav-links a {
       color: var(--amber-dim);
       text-decoration: none;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      transition: color 0.15s;
+      border: 1px solid transparent;
+      padding: 0.2rem 0.75rem;
+      border-radius: 3px;
+      transition: color 0.15s, border-color 0.15s;
     }
     .nav-links a:hover { color: var(--amber); }
+    .nav-links a.active { border-color: var(--amber); color: var(--amber-bright); text-shadow: 0 0 8px var(--amber); }
 
     /* ── Hero ── */
     .hero {
@@ -193,11 +206,15 @@
 
   <nav>
     <div class="wrap">
-      <a class="logo" href="home.html">◈ FTMS DASHBOARD</a>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a class="logo" href="home.html">◈ FTMS</a>
+        <span class="logo-sub">Dashboard</span>
+      </div>
       <div class="nav-links">
         <a href="index.html">Open App</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
+        <a class="active" href="home.html">Home</a>
       </div>
     </div>
   </nav>

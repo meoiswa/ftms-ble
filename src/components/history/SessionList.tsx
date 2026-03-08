@@ -18,7 +18,7 @@ export function SessionList({ sessions, onSelect }: SessionListProps) {
 
   return (
     <div className="space-y-3">
-      {sessions.map(s => (
+      {sessions.filter(s => !s.deletedAt).map(s => (
         <SessionCard key={s.id} session={s} onClick={() => onSelect(s)} />
       ))}
     </div>

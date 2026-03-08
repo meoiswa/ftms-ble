@@ -49,6 +49,18 @@ export function SessionDetail({ session, onBack, onDelete }: SessionDetailProps)
     }
   }
 
+  const handleJsonExport = () => {
+    const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const date = new Date(session.startedAt)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    a.download = `ftms_${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}_${session.id}.json`
+    a.href = url
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const chartData = session.dataPoints.map((dp, i) => {
     const d = dp.data as Record<string, number | undefined>
     return {
@@ -64,16 +76,19 @@ export function SessionDetail({ session, onBack, onDelete }: SessionDetailProps)
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button className="btn text-xs" onClick={onBack}>← BACK</button>
-        <div>
-          <div className="text-amber-glow tracking-wider uppercase text-sm">
-            {getMachineLabel(session.machineType)}
-          </div>
-          <div className="text-amber-dim text-xs">
-            {date.toLocaleDateString()} · {date.toLocaleTimeString()} · {fmtDuration(session.duration)}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button className="btn text-xs" onClick={onBack}>← BACK</button>
+          <div>
+            <div className="text-amber-glow tracking-wider uppercase text-sm">
+              {getMachineLabel(session.machineType)}
+            </div>
+            <div className="text-amber-dim text-xs">
+              {date.toLocaleDateString()} · {date.toLocaleTimeString()} · {fmtDuration(session.duration)}
+            </div>
           </div>
         </div>
+        <button className="btn text-xs" onClick={handleJsonExport}>↓ JSON</button>
       </div>
 
       {/* Stats grid */}

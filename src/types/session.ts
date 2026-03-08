@@ -19,6 +19,7 @@ export interface SessionStats {
 
 export interface Session {
   id: string
+  deletedAt: number | null // ms since epoch, set when user deletes a session (used for Drive sync)
   machineType: MachineType
   startedAt: number    // ms since epoch
   endedAt: number      // ms since epoch

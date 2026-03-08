@@ -15,9 +15,12 @@ export function useStorage(): StorageState {
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    const all = await getAllSessions()
-    setSessions(all)
-    setLoading(false)
+    try {
+      const all = await getAllSessions()
+      setSessions(all)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { refresh() }, [refresh])

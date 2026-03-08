@@ -115,6 +115,7 @@ export function useSession(onSessionSaved?: (session: Session) => void): Session
 
     const session: Session = {
       id: current.id,
+      deletedAt: null,
       machineType: current.machineType,
       startedAt,
       endedAt,

@@ -226,9 +226,32 @@ export default function SettingsPage() {
         {/* About */}
         <div className="panel p-4">
           <div className="text-xs uppercase tracking-widest text-amber-dim opacity-60 mb-2">About</div>
-          <div className="text-xs text-amber-dim opacity-50 space-y-1">
-            <div>FTMS Dashboard — Web Bluetooth fitness machine tracker</div>
-            <div>Add plugins via <code className="text-teal-accent">src/plugins/plugins.config.ts</code></div>
+          <div className="text-xs text-amber-dim space-y-1">
+            <div className="opacity-50">FTMS Dashboard — Web Bluetooth fitness machine tracker</div>
+            <div className="opacity-50">
+              {plugins.length > 0
+                ? `Loaded plugins: ${plugins.map(p => p.name).join(', ')}`
+                : 'No plugins loaded.'}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <a
+                href={`${import.meta.env.BASE_URL}privacy.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-dim hover:text-amber-glow transition-colors tracking-wide"
+              >
+                Privacy Policy
+              </a>
+              <span className="opacity-30">·</span>
+              <a
+                href={`${import.meta.env.BASE_URL}terms.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-dim hover:text-amber-glow transition-colors tracking-wide"
+              >
+                Terms of Service
+              </a>
+            </div>
           </div>
         </div>
       </div>

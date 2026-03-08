@@ -36,27 +36,37 @@ export function Header() {
   return (
     <header className="border-b border-cockpit-border bg-cockpit-dark sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 h-12 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        {/* Left: logo + homepage link + dashboard label */}
+        <div className="flex items-center gap-3 flex-grow-1">
           <span className="text-amber-glow glow-amber font-mono text-sm tracking-widest uppercase font-bold">
             ◈ FTMS
           </span>
+          <a
+            href={`${import.meta.env.BASE_URL}home.html`}
+            className="text-amber-dim text-xs hidden sm:block tracking-wider hover:text-amber-glow transition-colors"
+            title="Homepage"
+          >
+            ⌂
+          </a>
           <span className="text-amber-dim text-xs hidden sm:block tracking-wider">DASHBOARD</span>
         </div>
 
-        <nav className="flex items-center gap-2">
-          {/* Show compact session timer when recording and not on Live page */}
+        {/* Center: connect button */}
+        <ConnectButton
+          status={bluetooth.status}
+          onConnect={bluetooth.connect}
+          onDisconnect={bluetooth.disconnect}
+          compact
+        />
+
+        {/* Right: session timer + nav + theme toggle */}
+        <nav className="flex items-center gap-2 flex-grow-1 justify-end">
           {isRecording && !isOnLive && (
             <SessionTimer startedAt={active?.startedAt ?? null} running compact />
           )}
           {navLink('/', 'Live')}
           {navLink('/history', 'History')}
           {navLink('/settings', 'Settings')}
-          <ConnectButton
-            status={bluetooth.status}
-            onConnect={bluetooth.connect}
-            onDisconnect={bluetooth.disconnect}
-            compact
-          />
           <button
             className="btn text-xs px-2"
             onClick={toggle}
