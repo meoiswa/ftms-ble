@@ -1,6 +1,6 @@
 # FTMS Dashboard
 
-## **[Hosted on Github Pages](https://meoiswa.github.io/ftms-ble/home)**
+## **[Hosted on Github Pages](https://ftms.meoiswa.cat)**
 
 A web-based dashboard for FTMS-enabled fitness machines (indoor bikes, treadmills, rowers, cross trainers, stair climbers) using the Web Bluetooth API. No app install required — runs entirely in the browser.
 
