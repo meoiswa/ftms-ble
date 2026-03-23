@@ -1,46 +1,13 @@
 import { useState, useRef, useCallback } from 'react'
 import { MachineType } from '../types/ftms'
 import type { MachineData } from '../types/ftms'
-import type { Session, ActiveSession, DataPoint, SessionStats } from '../types/session'
+import type { Session, ActiveSession, DataPoint } from '../types/session'
 import { saveSession } from '../storage/sessions'
 import { broadcastDataPoint, broadcastSessionEnd } from '../plugins/registry'
+import { computeStats } from '../session/stats'
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-function computeStats(dataPoints: DataPoint[]): SessionStats {
-  const powers: number[] = []
-  const heartRates: number[] = []
-  const speeds: number[] = []
-  const cadences: number[] = []
-  let totalDistance: number | undefined
-  let totalCalories: number | undefined
-
-  for (const dp of dataPoints) {
-    const d = dp.data as Record<string, number | undefined>
-    if (d.instantaneousPower != null) powers.push(d.instantaneousPower)
-    if (d.heartRate != null) heartRates.push(d.heartRate)
-    if (d.instantaneousSpeed != null) speeds.push(d.instantaneousSpeed)
-    if (d.instantaneousCadence != null) cadences.push(d.instantaneousCadence)
-    if (d.totalDistance != null) totalDistance = d.totalDistance
-    if (d.totalEnergy != null) totalCalories = d.totalEnergy
-  }
-
-  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : undefined
-  const max = (arr: number[]) => arr.length ? Math.max(...arr) : undefined
-
-  return {
-    avgPower: avg(powers),
-    maxPower: max(powers),
-    avgHeartRate: avg(heartRates),
-    maxHeartRate: max(heartRates),
-    avgSpeed: avg(speeds),
-    maxSpeed: max(speeds),
-    avgCadence: avg(cadences),
-    totalDistance,
-    totalCalories,
-  }
 }
 
 // Fields indicating active exercise — used to trim resting periods and detect activity
@@ -78,7 +45,7 @@ function trimResting(points: DataPoint[]): DataPoint[] {
 export interface SessionState {
   active: ActiveSession | null
   isRecording: boolean
-  startSession: (machineType: MachineType) => void
+  startSession: (machineType: MachineType, deviceName?: string | null) => void
   stopSession: () => Promise<Session | null>
   addDataPoint: (machineType: MachineType, data: MachineData) => void
 }
@@ -87,9 +54,11 @@ export function useSession(onSessionSaved?: (session: Session) => void): Session
   const [active, setActive] = useState<ActiveSession | null>(null)
   const activeRef = useRef<ActiveSession | null>(null)
 
-  const startSession = useCallback((machineType: MachineType) => {
+  const startSession = useCallback((machineType: MachineType, deviceName?: string | null) => {
     const session: ActiveSession = {
       id: generateId(),
+      deviceId: deviceName,
+      deviceName,
       machineType,
       startedAt: Date.now(),
       dataPoints: [],
@@ -116,6 +85,8 @@ export function useSession(onSessionSaved?: (session: Session) => void): Session
     const session: Session = {
       id: current.id,
       deletedAt: null,
+      deviceId: current.deviceId ?? null,
+      deviceName: current.deviceName ?? current.deviceId ?? null,
       machineType: current.machineType,
       startedAt,
       endedAt,

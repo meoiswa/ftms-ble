@@ -12,6 +12,7 @@ const INDEX_FILE = 'index.json.gz'
 export interface SessionIndexEntry {
   id: string
   deletedAt: number | null
+  updatedAt?: number
   startedAt: number
   fileName: string
   fileId: string  // Drive file ID for direct download — no search needed
@@ -161,7 +162,14 @@ export async function uploadSession(session: Session, existingFileId: string | n
   const folderId = await getOrCreateFolder()
   const fileName = driveFileName(session)
   const fileId = await upsertGzipJsonFile(folderId, existingFileId, fileName, session)
-  return { id: session.id, deletedAt: null, startedAt: session.startedAt, fileName, fileId }
+  return {
+    id: session.id,
+    deletedAt: null,
+    updatedAt: session.updatedAt,
+    startedAt: session.startedAt,
+    fileName,
+    fileId,
+  }
 }
 
 /** Download a session file directly by Drive file ID — no search request needed. */

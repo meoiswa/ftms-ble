@@ -11,7 +11,9 @@
  */
 import type { FtmsPlugin } from './index'
 import { tcxPlugin } from './builtin/tcx'
+import { dmasunPlugin } from './builtin/dmasun'
 
 export const plugins: FtmsPlugin[] = [
   tcxPlugin,
+  dmasunPlugin,
 ]

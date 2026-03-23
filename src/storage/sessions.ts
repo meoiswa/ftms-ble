@@ -3,7 +3,20 @@ import type { Session } from '../types/session'
 
 export async function saveSession(session: Session): Promise<void> {
   const db = await getDb()
-  await db.put('sessions', session)
+  const next: Session = {
+    ...session,
+    updatedAt: session.updatedAt ?? Date.now(),
+  }
+  await db.put('sessions', next)
+}
+
+export async function saveSessionTouched(session: Session): Promise<void> {
+  const db = await getDb()
+  const next: Session = {
+    ...session,
+    updatedAt: Date.now(),
+  }
+  await db.put('sessions', next)
 }
 
 export async function getSession(id: string): Promise<Session | undefined> {
@@ -23,6 +36,7 @@ export async function deleteSession(id: string): Promise<void> {
   if (session) {
     session.dataPoints = [] // Clear data points to save space, but keep metadata for sync purposes
     session.deletedAt = Date.now()
+    session.updatedAt = Date.now()
     await db.put('sessions', session)
   }
 }

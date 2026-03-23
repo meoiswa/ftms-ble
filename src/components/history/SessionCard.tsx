@@ -24,6 +24,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
   const date = new Date(session.startedAt)
   const dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
   const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  const deviceName = session.deviceName ?? session.deviceId
 
   return (
     <button
@@ -36,6 +37,11 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
             <span className="text-amber-glow text-sm tracking-wider uppercase">
               {getMachineLabel(session.machineType)}
             </span>
+            {deviceName && (
+              <span className="text-amber-dim text-xs tracking-wide truncate max-w-[16rem]">
+                {deviceName}
+              </span>
+            )}
             {session.syncedAt && (
               <span className="text-green-dim text-xs tracking-wide shrink-0">✓ synced</span>
             )}

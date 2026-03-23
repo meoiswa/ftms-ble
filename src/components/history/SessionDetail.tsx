@@ -10,6 +10,10 @@ interface SessionDetailProps {
   session: Session
   onBack: () => void
   onDelete: (id: string) => void
+  canApplySavedFixes: boolean
+  onApplySavedFixes: (session: Session) => Promise<Session>
+  connectedDeviceName: string | null
+  onAssociateDevice: (session: Session, deviceName: string) => Promise<Session>
 }
 
 function fmtDuration(seconds: number): string {
@@ -20,9 +24,19 @@ function fmtDuration(seconds: number): string {
   return `${m}m ${s}s`
 }
 
-export function SessionDetail({ session, onBack, onDelete }: SessionDetailProps) {
+export function SessionDetail({
+  session,
+  onBack,
+  onDelete,
+  canApplySavedFixes,
+  onApplySavedFixes,
+  connectedDeviceName,
+  onAssociateDevice,
+}: SessionDetailProps) {
   const [exportStatus, setExportStatus] = useState<Record<string, string>>({})
   const [importStatus, setImportStatus] = useState<Record<string, string>>({})
+  const [patchStatus, setPatchStatus] = useState<string | null>(null)
+  const [associateStatus, setAssociateStatus] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const exportPlugins = getPlugins().filter(p => p.export)
@@ -61,6 +75,23 @@ export function SessionDetail({ session, onBack, onDelete }: SessionDetailProps)
     URL.revokeObjectURL(url)
   }
 
+  const handleApplyFixes = async () => {
+    setPatchStatus('running')
+    const before = JSON.stringify(session)
+    const patched = await onApplySavedFixes(session)
+    const after = JSON.stringify(patched)
+    setPatchStatus(before === after ? 'No applicable fixes for this session' : 'Applied device fixes')
+  }
+
+  const canAssociateDevice = !session.deviceName && !session.deviceId && !!connectedDeviceName
+
+  const handleAssociateDevice = async () => {
+    if (!connectedDeviceName) return
+    setAssociateStatus('running')
+    await onAssociateDevice(session, connectedDeviceName)
+    setAssociateStatus(`Associated with ${connectedDeviceName}`)
+  }
+
   const chartData = session.dataPoints.map((dp, i) => {
     const d = dp.data as Record<string, number | undefined>
     return {
@@ -80,16 +111,45 @@ export function SessionDetail({ session, onBack, onDelete }: SessionDetailProps)
         <div className="flex items-center gap-3">
           <button className="btn text-xs" onClick={onBack}>← BACK</button>
           <div>
-            <div className="text-amber-glow tracking-wider uppercase text-sm">
+            <div className="text-amber-glow tracking-wider uppercase text-sm flex items-center gap-2">
               {getMachineLabel(session.machineType)}
+              {(session.deviceName ?? session.deviceId) && (
+                <span className="text-amber-dim text-xs tracking-wide normal-case truncate max-w-[16rem]">
+                  {session.deviceName ?? session.deviceId}
+                </span>
+              )}
             </div>
             <div className="text-amber-dim text-xs">
               {date.toLocaleDateString()} · {date.toLocaleTimeString()} · {fmtDuration(session.duration)}
             </div>
           </div>
         </div>
-        <button className="btn text-xs" onClick={handleJsonExport}>↓ JSON</button>
+        <div className="flex items-center gap-2">
+          {canAssociateDevice && (
+            <button className="btn text-xs" onClick={handleAssociateDevice} disabled={associateStatus === 'running'}>
+              ASSOCIATE DEVICE
+            </button>
+          )}
+          {canApplySavedFixes && (
+            <button className="btn text-xs" onClick={handleApplyFixes} disabled={patchStatus === 'running'}>
+              APPLY FIXES
+            </button>
+          )}
+          <button className="btn text-xs" onClick={handleJsonExport}>↓ JSON</button>
+        </div>
       </div>
+
+      {patchStatus && (
+        <div className="text-xs text-amber-dim tracking-wide">
+          {patchStatus === 'running' ? 'Applying fixes...' : patchStatus}
+        </div>
+      )}
+
+      {associateStatus && (
+        <div className="text-xs text-amber-dim tracking-wide">
+          {associateStatus === 'running' ? 'Associating device...' : associateStatus}
+        </div>
+      )}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

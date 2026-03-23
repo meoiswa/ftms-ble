@@ -21,6 +21,7 @@ import {
 } from "../storage/sessions";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const UNIX_EPOCH = 0;
 
 export interface SyncHook {
   syncState: SyncState;
@@ -64,46 +65,93 @@ export function useSync(onSyncComplete?: () => void): SyncHook {
         loadSyncIndex(),
       ]);
 
+      // Normalize missing remote timestamps to unix epoch.
+      for (const remoteEntry of index.sessions) {
+        if (remoteEntry.updatedAt == null) {
+          remoteEntry.updatedAt = UNIX_EPOCH;
+          indexUpdated = true;
+        }
+      }
+
+      // Normalize missing local timestamps to unix epoch and persist.
+      const localNormalized: Session[] = [];
+      for (const s of local) {
+        if (s.updatedAt == null) {
+          const normalized = { ...s, updatedAt: UNIX_EPOCH };
+          await saveSession(normalized);
+          localNormalized.push(normalized);
+        } else {
+          localNormalized.push(s);
+        }
+      }
+
       // Remove local sessions that have been deleted on another device but are still present locally (tombstoned in index)
       for (const s of index.sessions.filter((s) => s.deletedAt)) {
         await removeSession(s.id);
       }
 
-      // Pull: sessions in Drive index but missing locally → download
-      const localMap = new Map(local.map((s) => [s.id, s]));
-      const missingLocally = index.sessions
-        .filter((s) => !s.deletedAt)
-        .filter((s) => !localMap.has(s.id));
+      // Two-way reconcile based on updatedAt for all indexed (non-deleted) sessions.
+      const localMap = new Map(localNormalized.map((s) => [s.id, s]));
+      for (const entry of index.sessions.filter((s) => !s.deletedAt)) {
+        const localSession = localMap.get(entry.id);
+        const remoteUpdatedAt = entry.updatedAt ?? UNIX_EPOCH;
 
-      for (const entry of missingLocally) {
-        let remote: Session;
-        try {
-          remote = await downloadSessionFile(entry.fileId);
-        } catch (err) {
-          if (err instanceof Error) {
-            if (err.message.includes("File not found")) {
-              // If the file is missing, add a tombstone to the index to prevent repeated failed attempts
+        // Missing local copy -> pull from remote.
+        if (!localSession) {
+          try {
+            const remote = await downloadSessionFile(entry.fileId);
+            const remoteSession: Session = {
+              ...remote,
+              updatedAt: remote.updatedAt ?? remoteUpdatedAt,
+              syncedAt: now,
+            };
+            await saveSession(remoteSession);
+          } catch (err) {
+            if (err instanceof Error && err.message.includes("File not found")) {
               entry.deletedAt = Date.now();
               indexUpdated = true;
             }
           }
           continue;
         }
-        try {
-          await saveSession({ ...remote, syncedAt: now });
-        } catch (ex) {
-          if (ex instanceof Error) {
-            /* skip corrupt/missing file — leave in index */
+
+        const localUpdatedAt = localSession.updatedAt ?? UNIX_EPOCH;
+
+        if (localUpdatedAt > remoteUpdatedAt) {
+          // Local is newer -> overwrite remote file and index timestamp.
+          const localForUpload: Session = { ...localSession, syncedAt: now };
+          const uploaded = await uploadSession(localForUpload, entry.fileId);
+          entry.fileId = uploaded.fileId;
+          entry.fileName = uploaded.fileName;
+          entry.startedAt = uploaded.startedAt;
+          entry.updatedAt = uploaded.updatedAt ?? localUpdatedAt;
+          await saveSession(localForUpload);
+          indexUpdated = true;
+        } else if (localUpdatedAt < remoteUpdatedAt) {
+          // Remote is newer -> overwrite local.
+          try {
+            const remote = await downloadSessionFile(entry.fileId);
+            const remoteSession: Session = {
+              ...remote,
+              updatedAt: remote.updatedAt ?? remoteUpdatedAt,
+              syncedAt: now,
+            };
+            await saveSession(remoteSession);
+          } catch {
+            // Leave for future sync attempts.
           }
         }
       }
 
-      // Push: local sessions absent from index, not deleted, and at most 30 days old
-      const missingRemotely = local.filter((s) => !s.deletedAt && !index.sessions.some((e) => e.id === s.id) && s.startedAt >= cutoff);
-      for (const entry of missingRemotely) {
-        const synced = { ...entry, syncedAt: now };
-        const uploaded = await uploadSession(synced);
-        await saveSession(synced);
+      // Push local sessions absent from index, not deleted, and at most 30 days old.
+      const missingRemotely = localNormalized.filter(
+        (s) => !s.deletedAt && !index.sessions.some((e) => e.id === s.id) && s.startedAt >= cutoff,
+      );
+      for (const session of missingRemotely) {
+        const localUpdatedAt = session.updatedAt ?? UNIX_EPOCH;
+        const localForUpload: Session = { ...session, updatedAt: localUpdatedAt, syncedAt: now };
+        const uploaded = await uploadSession(localForUpload);
+        await saveSession(localForUpload);
         index.sessions.push(uploaded);
         indexUpdated = true;
       }
@@ -143,7 +191,11 @@ export function useSync(onSyncComplete?: () => void): SyncHook {
     try {
       const { fileId: indexFileId, index } = await loadSyncIndex();
       const existing = index.sessions.find((e) => e.id === session.id);
-      const synced = { ...session, syncedAt: Date.now() };
+      const synced: Session = {
+        ...session,
+        updatedAt: session.updatedAt ?? Date.now(),
+        syncedAt: Date.now(),
+      };
       const entry = await uploadSession(synced, existing?.fileId ?? null);
       await saveSession(synced);
       const updatedSessions = index.sessions.filter((e) => e.id !== session.id);

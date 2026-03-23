@@ -9,6 +9,7 @@ import { useSession, INSTANTANEOUS_FIELDS } from '../hooks/useSession'
 import { filterSentinelValues } from '../bluetooth/filterSentinels'
 import { useSync } from '../sync/useSync'
 import type { SyncHook } from '../sync/useSync'
+import { applyLiveDataPatches } from '../plugins/registry'
 
 // ─── Banned fields persistence ───────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Expose startSession so DashboardPage can trigger it explicitly
   const startSession = useCallback((machineType: MachineType) => {
     isRecordingRef.current = true
-    sessionHook.startSession(machineType)
+    sessionHook.startSession(machineType, currentDeviceNameRef.current)
   }, [sessionHook.startSession])
 
   const stopSession = useCallback(async (): Promise<Session | null> => {
@@ -142,14 +143,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // 1. Filter sentinel ("not implemented") values
     const filtered = filterSentinelValues(rawData as Record<string, unknown>)
 
-    // 2. Strip banned fields
-    for (const field of banned) delete filtered[field]
+    // 2. Apply plugin data patches after sentinel filtering and before UI/session logic
+    const patched = applyLiveDataPatches(filtered as MachineData, {
+      machineType,
+      deviceName: devName,
+    }) as Record<string, unknown>
 
-    // 3. Track which fields have changed from their initial value
+    // 3. Strip banned fields
+    for (const field of banned) delete patched[field]
+
+    // 4. Track which fields have changed from their initial value
     const newlyObserved: string[] = []
     const newlyConfirmed: string[] = []
 
-    for (const [key, val] of Object.entries(filtered)) {
+    for (const [key, val] of Object.entries(patched)) {
       if (val === undefined) continue
       if (confirmedFieldsRef.current.has(key)) continue
 
@@ -171,14 +178,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setConfirmedFields(next)
     }
 
-    // 4. Build display data (confirmed fields only)
+    // 5. Build display data (confirmed fields only)
     const display: Record<string, unknown> = {}
-    for (const [key, val] of Object.entries(filtered)) {
+    for (const [key, val] of Object.entries(patched)) {
       if (confirmedFieldsRef.current.has(key)) display[key] = val
     }
     setLiveData(display as MachineData)
 
-    // 4b. Maintain rolling 30-second buffer for the live chart (always, regardless of recording)
+    // 5b. Maintain rolling 30-second buffer for the live chart (always, regardless of recording)
     if (Object.keys(display).length > 0) {
       const now = Date.now()
       const point: DataPoint = { timestamp: now, data: display as MachineData }
@@ -188,12 +195,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
     }
 
-    // 5. Track whether the machine is actively moving (any instantaneous field > 0)
-    const d = filtered as Record<string, unknown>
+    // 6. Track whether the machine is actively moving (any instantaneous field > 0)
+    const d = patched as Record<string, unknown>
     const active = [...INSTANTANEOUS_FIELDS].some(f => (d[f] as number ?? 0) > 0)
     setIsActive(active)
 
-    // 6. Record data points only when a session is in progress
+    // 7. Record data points only when a session is in progress
     if (isRecordingRef.current && Object.keys(display).length > 0) {
       sessionHook.addDataPoint(machineType, display as MachineData)
     }

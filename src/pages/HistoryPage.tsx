@@ -4,12 +4,16 @@ import { useStorage } from '../storage/useStorage'
 import { useAppContext } from '../context/AppContext'
 import { SessionList } from '../components/history/SessionList'
 import { SessionDetail } from '../components/history/SessionDetail'
-import { getPlugins } from '../plugins/registry'
-import { saveSession } from '../storage/sessions'
+import {
+  getPlugins,
+  hasApplicableSavedSessionPatch,
+  applySavedSessionPatchesWithMeta,
+} from '../plugins/registry'
+import { saveSessionTouched } from '../storage/sessions'
 
 export default function HistoryPage() {
   const { sessions, loading, refresh, deleteSession } = useStorage()
-  const { sync } = useAppContext()
+  const { sync, bluetooth } = useAppContext()
   const { isSignedIn, deleteRemoteSession, syncState } = sync
   const [selected, setSelected] = useState<Session | null>(null)
   const [importStatus, setImportStatus] = useState<Record<string, string>>({})
@@ -28,7 +32,7 @@ export default function HistoryPage() {
     const result = await plugin.import!()
     if (result.ok && result.sessions) {
       for (const session of result.sessions) {
-        await saveSession({ ...session, importedFrom: pluginName })
+        await saveSessionTouched({ ...session, importedFrom: pluginName })
       }
       await refresh()
       setImportStatus(s => ({ ...s, [pluginName]: `✓ ${result.sessions!.length} imported` }))
@@ -43,6 +47,38 @@ export default function HistoryPage() {
     setSelected(null)
   }
 
+  const handleApplySavedFixes = async (session: Session): Promise<Session> => {
+    const result = applySavedSessionPatchesWithMeta(session)
+    const patched = result.session
+
+    if (result.appliedBy.length > 0) {
+      const next: Session = {
+        ...patched,
+        fixApplied: true,
+        appliedFixes: [...new Set([...(session.appliedFixes ?? []), ...result.appliedBy])],
+      }
+      await saveSessionTouched(next)
+      await refresh()
+      setSelected(next)
+      return next
+    }
+
+    setSelected(patched)
+    return patched
+  }
+
+  const handleAssociateDevice = async (session: Session, deviceName: string): Promise<Session> => {
+    const next: Session = {
+      ...session,
+      deviceId: deviceName,
+      deviceName,
+    }
+    await saveSessionTouched(next)
+    await refresh()
+    setSelected(next)
+    return next
+  }
+
   if (selected) {
     return (
       <div className="grid-bg min-h-[calc(100vh-3rem)]">
@@ -51,6 +87,10 @@ export default function HistoryPage() {
             session={selected}
             onBack={() => setSelected(null)}
             onDelete={handleDelete}
+            canApplySavedFixes={hasApplicableSavedSessionPatch(selected)}
+            onApplySavedFixes={handleApplySavedFixes}
+            connectedDeviceName={bluetooth.deviceName}
+            onAssociateDevice={handleAssociateDevice}
           />
         </div>
       </div>

@@ -1,4 +1,5 @@
 import type { Session, ActiveSession, DataPoint } from '../types/session'
+import type { MachineData, MachineType } from '../types/ftms'
 
 export interface PluginResult {
   ok: boolean
@@ -17,6 +18,15 @@ export interface PluginLogEntry {
   ts: number
 }
 
+export interface LivePatchContext {
+  machineType: MachineType
+  deviceName: string | null
+}
+
+export interface SavedSessionPatchContext {
+  source: 'saved-session'
+}
+
 export interface FtmsPlugin {
   name: string
   description: string
@@ -31,4 +41,10 @@ export interface FtmsPlugin {
   onDataPoint?(dataPoint: DataPoint, session: ActiveSession): Promise<PluginResult>
   /** Called automatically when a session ends */
   onSessionEnd?(session: Session): Promise<PluginResult>
+  /** Called for each BLE payload before dashboard/session processing */
+  patchLiveData?(data: MachineData, context: LivePatchContext): MachineData
+  /** Optional predicate to decide if saved-session fix action should be offered */
+  canPatchSavedSession?(session: Session): boolean
+  /** Called manually to patch an already-saved session */
+  patchSavedSession?(session: Session, context: SavedSessionPatchContext): Session
 }
