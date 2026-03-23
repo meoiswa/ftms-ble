@@ -1,8 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  registerServiceWorker,
+  getTokenFromSW,
+  setTokenInSW,
+  clearTokenInSW,
+} from './swHelper'
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
 const SCOPES = 'https://www.googleapis.com/auth/drive.file'
 
+// In-memory cache (cleared on refresh, restored from SW on init)
 let accessToken: string | null = null
 let tokenExpiry: number = 0
+let swReady = false
+
+export async function initializeAuth(): Promise<void> {
+  await registerServiceWorker()
+  swReady = true
+  // Restore token from Service Worker if available
+  const savedToken = await getTokenFromSW()
+  if (savedToken) {
+    accessToken = savedToken.token
+    tokenExpiry = savedToken.expiresAt
+  } else {
+    accessToken = null
+    tokenExpiry = 0
+    localStorage.removeItem('google_signed_in')
+  }
+}
 
 export function isGoogleAuthConfigured(): boolean {
   return Boolean(GOOGLE_CLIENT_ID)
@@ -43,6 +68,10 @@ function requestToken(prompt: '' | 'consent' | 'select_account'): Promise<string
           accessToken = response.access_token
           tokenExpiry = Date.now() + (response.expires_in ?? 3600) * 1000
           localStorage.setItem('google_signed_in', '1')
+          // Store in Service Worker for persistence across page reloads (background task)
+          if (swReady) {
+            setTokenInSW(response.access_token, response.expires_in ?? 3600).catch(console.error)
+          }
           resolve(response.access_token)
         }
       },
@@ -56,12 +85,6 @@ export function signIn(): Promise<string> {
   return requestToken('consent')
 }
 
-/** Silently restores the session if the user previously granted consent.
- *  Resolves with the token on success, rejects if consent is needed. */
-export function silentSignIn(): Promise<string> {
-  return requestToken('')
-}
-
 export function signOut(): void {
   if (accessToken) {
     (window as any).google?.accounts?.oauth2?.revoke(accessToken)
@@ -69,6 +92,9 @@ export function signOut(): void {
   accessToken = null
   tokenExpiry = 0
   localStorage.removeItem('google_signed_in')
+  if (swReady) {
+    clearTokenInSW().catch(console.error)
+  }
 }
 
 export function getAccessToken(): string | null {

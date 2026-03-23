@@ -1,12 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { SyncState, SyncStatus, Session } from "../types/session";
 import {
   signIn,
   signOut,
-  silentSignIn,
   isSignedIn,
   isGoogleAuthConfigured,
-  wasPreviouslySignedIn,
 } from "./auth";
 import {
   uploadSession,
@@ -123,21 +121,6 @@ export function useSync(onSyncComplete?: () => void): SyncHook {
       syncingRef.current = false;
     }
   }, [onSyncComplete, setStatus]);
-
-  // On mount, silently restore the token and auto-sync if previously signed in
-  useEffect(() => {
-    if (!isGoogleAuthConfigured() || !wasPreviouslySignedIn() || isSignedIn())
-      return;
-    silentSignIn()
-      .then(() => {
-        setSignedIn(true);
-        return syncNow();
-      })
-      .catch(() => {
-        signOut();
-        setSignedIn(false);
-      });
-  }, [syncNow]);
 
   const doSignIn = useCallback(async () => {
     try {

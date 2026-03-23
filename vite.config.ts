@@ -7,4 +7,11 @@ export default defineConfig({
   // BASE_PATH is injected by the GitHub Actions configure-pages step.
   // It resolves to '/' when a custom domain is active, or '/repo-name/' otherwise.
   base: process.env.BASE_PATH ?? '/',
+  build: {
+    rollupOptions: {
+      input: {
+        main: new URL('./index.html', import.meta.url).pathname,
+      },
+    },
+  },
 })
